@@ -1,13 +1,24 @@
 import random
 import pygame
 from game.text_box import TextBox
- 
+
+
 class GameEngine:
     def __init__(self, width, height):
         self.width = width
         self.height = height
 
-        self.words = ["PYTHON", "PYGAME", "PLANET", "ROCKET", "GALAXY", "STREAM", "PUZZLE", "ALGORITHM"]
+        self.words = [
+            "PYTHON",
+            "PYGAME",
+            "PLANET",
+            "ROCKET",
+            "GALAXY",
+            "STREAM",
+            "PUZZLE",
+            "ALGORITHM"
+        ]
+
         self.secret_word = ""
         self.scrambled_word = ""
 
@@ -27,9 +38,11 @@ class GameEngine:
 
     def scramble_string(self, word):
         letters = list(word)
+
         while True:
             random.shuffle(letters)
             shuffled = "".join(letters)
+
             if shuffled != word or len(word) <= 1:
                 return shuffled
 
@@ -40,14 +53,14 @@ class GameEngine:
 
     def submit_guess(self):
         guess = self.input_box.text.strip().upper()
+
         if not guess:
             self.feedback_msg = "Type a word before submitting!"
             self.feedback_color = (240, 170, 50)
             return
 
-        # BUG SYMPTON: 
-        # Player's guess is validated against the scrambled text instead of the original solution.
-        is_correct = (guess == self.scrambled_word)
+        # Check the player's guess against the original secret word
+        is_correct = (guess == self.secret_word)
 
         if is_correct:
             self.score += 1
@@ -64,6 +77,7 @@ class GameEngine:
 
         if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
             self.submit_guess()
+
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.submit_btn.collidepoint(event.pos):
                 self.submit_guess()
@@ -74,22 +88,91 @@ class GameEngine:
     def render(self, screen):
         screen.fill((26, 30, 38))
 
-        title_surf = self.font_title.render("Word Scramble Arena", True, (245, 245, 245))
-        screen.blit(title_surf, (self.width // 2 - title_surf.get_width() // 2, 25))
+        title_surf = self.font_title.render(
+            "Word Scramble Arena",
+            True,
+            (245, 245, 245)
+        )
 
-        score_surf = self.font_msg.render(f"Score: {self.score}", True, (255, 220, 80))
-        screen.blit(score_surf, (self.width // 2 - score_surf.get_width() // 2, 70))
+        screen.blit(
+            title_surf,
+            (
+                self.width // 2 - title_surf.get_width() // 2,
+                25
+            )
+        )
+
+        score_surf = self.font_msg.render(
+            f"Score: {self.score}",
+            True,
+            (255, 220, 80)
+        )
+
+        screen.blit(
+            score_surf,
+            (
+                self.width // 2 - score_surf.get_width() // 2,
+                70
+            )
+        )
 
         spaced_letters = "  ".join(self.scrambled_word)
-        scramble_surf = self.font_word.render(spaced_letters, True, (100, 200, 255))
-        screen.blit(scramble_surf, (self.width // 2 - scramble_surf.get_width() // 2, 130))
+
+        scramble_surf = self.font_word.render(
+            spaced_letters,
+            True,
+            (100, 200, 255)
+        )
+
+        screen.blit(
+            scramble_surf,
+            (
+                self.width // 2 - scramble_surf.get_width() // 2,
+                130
+            )
+        )
 
         self.input_box.render(screen)
 
-        pygame.draw.rect(screen, (50, 150, 85), self.submit_btn, border_radius=6)
-        pygame.draw.rect(screen, (220, 220, 220), self.submit_btn, width=2, border_radius=6)
-        btn_text = self.font_btn.render("SUBMIT", True, (255, 255, 255))
-        screen.blit(btn_text, (self.submit_btn.centerx - btn_text.get_width() // 2, self.submit_btn.centery - btn_text.get_height() // 2))
+        pygame.draw.rect(
+            screen,
+            (50, 150, 85),
+            self.submit_btn,
+            border_radius=6
+        )
 
-        feedback_surf = self.font_msg.render(self.feedback_msg, True, self.feedback_color)
-        screen.blit(feedback_surf, (self.width // 2 - feedback_surf.get_width() // 2, 285))
+        pygame.draw.rect(
+            screen,
+            (220, 220, 220),
+            self.submit_btn,
+            width=2,
+            border_radius=6
+        )
+
+        btn_text = self.font_btn.render(
+            "SUBMIT",
+            True,
+            (255, 255, 255)
+        )
+
+        screen.blit(
+            btn_text,
+            (
+                self.submit_btn.centerx - btn_text.get_width() // 2,
+                self.submit_btn.centery - btn_text.get_height() // 2
+            )
+        )
+
+        feedback_surf = self.font_msg.render(
+            self.feedback_msg,
+            True,
+            self.feedback_color
+        )
+
+        screen.blit(
+            feedback_surf,
+            (
+                self.width // 2 - feedback_surf.get_width() // 2,
+                285
+            )
+        )
