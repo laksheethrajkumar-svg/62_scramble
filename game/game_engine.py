@@ -45,9 +45,9 @@ class GameEngine:
             self.feedback_color = (240, 170, 50)
             return
 
-        # BUG SYMPTON: 
+        # BUG SYMPTON:
         # Player's guess is validated against the scrambled text instead of the original solution.
-        is_correct = (guess == self.scrambled_word)
+        is_correct = (guess == self.secret_word)
 
         if is_correct:
             self.score += 1
@@ -92,4 +92,4 @@ class GameEngine:
         screen.blit(btn_text, (self.submit_btn.centerx - btn_text.get_width() // 2, self.submit_btn.centery - btn_text.get_height() // 2))
 
         feedback_surf = self.font_msg.render(self.feedback_msg, True, self.feedback_color)
-        screen.blit(feedback_surf, (self.width // 2 - feedback_surf.get_width() // 2, 285))
+        screen.blit(feedback_surf, (self.width // 2 - feedback_surf.get_width() // 2, 285)
