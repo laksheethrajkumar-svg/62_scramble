@@ -24,8 +24,17 @@ class GameEngine:
 
         self.score = 0
 
-        # Stores the positions of letters revealed by hints
+        # -------------------------
+        # TASK 2: HINT VARIABLES
+        # -------------------------
         self.revealed_letters = set()
+
+        # -------------------------
+        # TASK 3: TIMER
+        # -------------------------
+        self.time_limit = 20
+        self.time_left = 20
+        self.timer_start = pygame.time.get_ticks()
 
         self.feedback_msg = "Unscramble the letters above!"
         self.feedback_color = (210, 215, 225)
@@ -46,7 +55,7 @@ class GameEngine:
             46
         )
 
-        # HINT button beside SUBMIT
+        # HINT button
         self.hint_btn = pygame.Rect(
             width // 2 + 150,
             210,
@@ -61,6 +70,9 @@ class GameEngine:
 
         self.next_round()
 
+    # -------------------------
+    # SCRAMBLE WORD
+    # -------------------------
     def scramble_string(self, word):
         letters = list(word)
 
@@ -71,15 +83,29 @@ class GameEngine:
             if shuffled != word or len(word) <= 1:
                 return shuffled
 
+    # -------------------------
+    # START NEXT ROUND
+    # -------------------------
     def next_round(self):
         self.secret_word = random.choice(self.words)
         self.scrambled_word = self.scramble_string(self.secret_word)
 
-        # Reset revealed letters for the new word
+        # Reset hints
         self.revealed_letters = set()
 
+        # Reset timer
+        self.time_left = self.time_limit
+        self.timer_start = pygame.time.get_ticks()
+
+        # Clear input
         self.input_box.clear()
 
+        self.feedback_msg = "Unscramble the letters above!"
+        self.feedback_color = (210, 215, 225)
+
+    # -------------------------
+    # TASK 1: SUBMIT GUESS
+    # -------------------------
     def submit_guess(self):
         guess = self.input_box.text.strip().upper()
 
@@ -88,9 +114,9 @@ class GameEngine:
             self.feedback_color = (240, 170, 50)
             return
 
-        # Task 1 fix:
-        # Compare the guess with the original secret word,
-        # NOT the scrambled word.
+        # IMPORTANT:
+        # Compare guess with the ORIGINAL secret word
+        # and NOT the scrambled word.
         is_correct = (guess == self.secret_word)
 
         if is_correct:
@@ -110,14 +136,20 @@ class GameEngine:
 
             self.input_box.clear()
 
+    # -------------------------
+    # TASK 2: GIVE HINT
+    # -------------------------
     def give_hint(self):
-        # Find the first letter that has not been revealed yet
+
+        # Find the first unrevealed letter
         for i in range(len(self.secret_word)):
 
             if i not in self.revealed_letters:
+
+                # Reveal this letter
                 self.revealed_letters.add(i)
 
-                # Deduct 1 point for using a hint
+                # Deduct 1 point
                 self.score -= 1
 
                 self.feedback_msg = "Hint revealed! -1 point."
@@ -125,19 +157,14 @@ class GameEngine:
 
                 return
 
-        # All letters have already been revealed
+        # If every letter is already revealed
         self.feedback_msg = "All letters are already revealed!"
         self.feedback_color = (210, 215, 225)
 
+    # -------------------------
+    # TASK 2: DISPLAY HINT
+    # -------------------------
     def get_hint_display(self):
-        # Example:
-        # PYTHON
-        # P _ _ _ _ _
-        #
-        # After another hint:
-        # P Y _ _ _ _
-        #
-        # And so on.
 
         display = []
 
@@ -145,37 +172,85 @@ class GameEngine:
 
             if i in self.revealed_letters:
                 display.append(letter)
+
             else:
                 display.append("_")
 
         return " ".join(display)
 
+    # -------------------------
+    # TASK 3: TIMER UPDATE
+    # -------------------------
+    def update_timer(self):
+
+        current_time = pygame.time.get_ticks()
+
+        elapsed_seconds = (
+            current_time - self.timer_start
+        ) / 1000
+
+        self.time_left = self.time_limit - elapsed_seconds
+
+        # Timer expired
+        if self.time_left <= 0:
+
+            self.time_left = 0
+
+            # Reveal correct answer
+            self.feedback_msg = (
+                f"TIME'S UP! The word was '{self.secret_word}'."
+            )
+
+            self.feedback_color = (255, 80, 80)
+
+            # Automatically move to next round
+            self.next_round()
+
+    # -------------------------
+    # HANDLE USER INPUT
+    # -------------------------
     def handle_event(self, event):
+
         self.input_box.handle_event(event)
 
-        # Press ENTER to submit
+        # Keyboard
         if event.type == pygame.KEYDOWN:
+
+            # ENTER = SUBMIT
             if event.key == pygame.K_RETURN:
                 self.submit_guess()
 
-        # Mouse clicks
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        # Mouse
+        elif event.type == pygame.MOUSEBUTTONDOWN:
 
-            # SUBMIT button
-            if self.submit_btn.collidepoint(event.pos):
-                self.submit_guess()
+            if event.button == 1:
 
-            # HINT button
-            elif self.hint_btn.collidepoint(event.pos):
-                self.give_hint()
+                # SUBMIT button
+                if self.submit_btn.collidepoint(event.pos):
+                    self.submit_guess()
 
+                # HINT button
+                elif self.hint_btn.collidepoint(event.pos):
+                    self.give_hint()
+
+    # -------------------------
+    # UPDATE
+    # -------------------------
     def update(self):
-        pass
 
+        # Update countdown timer
+        self.update_timer()
+
+    # -------------------------
+    # RENDER SCREEN
+    # -------------------------
     def render(self, screen):
+
         screen.fill((26, 30, 38))
 
-        # Title
+        # -------------------------
+        # TITLE
+        # -------------------------
         title_surf = self.font_title.render(
             "Word Scramble Arena",
             True,
@@ -185,12 +260,15 @@ class GameEngine:
         screen.blit(
             title_surf,
             (
-                self.width // 2 - title_surf.get_width() // 2,
+                self.width // 2
+                - title_surf.get_width() // 2,
                 25
             )
         )
 
-        # Score
+        # -------------------------
+        # SCORE
+        # -------------------------
         score_surf = self.font_msg.render(
             f"Score: {self.score}",
             True,
@@ -200,13 +278,93 @@ class GameEngine:
         screen.blit(
             score_surf,
             (
-                self.width // 2 - score_surf.get_width() // 2,
+                self.width // 2
+                - score_surf.get_width() // 2,
                 70
             )
         )
 
-        # Scrambled word
-        spaced_letters = "  ".join(self.scrambled_word)
+        # -------------------------
+        # TIMER TEXT
+        # -------------------------
+        timer_text = f"Time: {max(0, int(self.time_left))}"
+
+        timer_surf = self.font_msg.render(
+            timer_text,
+            True,
+            (255, 255, 255)
+        )
+
+        screen.blit(
+            timer_surf,
+            (
+                self.width // 2
+                - timer_surf.get_width() // 2,
+                100
+            )
+        )
+
+        # -------------------------
+        # TIMER BAR
+        # -------------------------
+
+        bar_width = 300
+        bar_height = 18
+
+        bar_x = (
+            self.width // 2
+            - bar_width // 2
+        )
+
+        bar_y = 125
+
+        # Background
+        pygame.draw.rect(
+            screen,
+            (70, 70, 70),
+            (
+                bar_x,
+                bar_y,
+                bar_width,
+                bar_height
+            ),
+            border_radius=8
+        )
+
+        # Remaining time
+        timer_ratio = (
+            self.time_left / self.time_limit
+        )
+
+        timer_ratio = max(
+            0,
+            min(1, timer_ratio)
+        )
+
+        remaining_width = int(
+            bar_width * timer_ratio
+        )
+
+        if remaining_width > 0:
+
+            pygame.draw.rect(
+                screen,
+                (80, 200, 100),
+                (
+                    bar_x,
+                    bar_y,
+                    remaining_width,
+                    bar_height
+                ),
+                border_radius=8
+            )
+
+        # -------------------------
+        # SCRAMBLED WORD
+        # -------------------------
+        spaced_letters = "  ".join(
+            self.scrambled_word
+        )
 
         scramble_surf = self.font_word.render(
             spaced_letters,
@@ -217,12 +375,15 @@ class GameEngine:
         screen.blit(
             scramble_surf,
             (
-                self.width // 2 - scramble_surf.get_width() // 2,
-                125
+                self.width // 2
+                - scramble_surf.get_width() // 2,
+                155
             )
         )
 
-        # Hint display
+        # -------------------------
+        # HINT DISPLAY
+        # -------------------------
         hint_text = self.get_hint_display()
 
         hint_surf = self.font_msg.render(
@@ -234,15 +395,20 @@ class GameEngine:
         screen.blit(
             hint_surf,
             (
-                self.width // 2 - hint_surf.get_width() // 2,
-                175
+                self.width // 2
+                - hint_surf.get_width() // 2,
+                190
             )
         )
 
-        # Input box
+        # -------------------------
+        # INPUT BOX
+        # -------------------------
         self.input_box.render(screen)
 
-        # SUBMIT button
+        # -------------------------
+        # SUBMIT BUTTON
+        # -------------------------
         pygame.draw.rect(
             screen,
             (50, 150, 85),
@@ -274,7 +440,9 @@ class GameEngine:
             )
         )
 
-        # HINT button
+        # -------------------------
+        # HINT BUTTON
+        # -------------------------
         pygame.draw.rect(
             screen,
             (180, 130, 40),
@@ -306,7 +474,9 @@ class GameEngine:
             )
         )
 
-        # Feedback message
+        # -------------------------
+        # FEEDBACK MESSAGE
+        # -------------------------
         feedback_surf = self.font_msg.render(
             self.feedback_msg,
             True,
